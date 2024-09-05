@@ -1,0 +1,15 @@
+{
+  "name": "hardhat-project",
+  "scripts": {
+    "test": "hardhat test",
+    "circuits:setup": "rimraf ./circuits/keys && mkdir -p ./circuits/keys && zokrates setup --input ./circuits/out/out -p ./circuits/keys/proving.key -v ./circuits/keys/verification.key",
+    "circuits:compute-witness": "rimraf ./circuits/witness && mkdir -p ./circuits/witness && zokrates compute-witness -i ./circuits/out/out -s ./circuits/out/abi.json -o ./circuits/witness/witness --circom-witness ./circuits/witness/out.wtns",
+    "circuits:generate-proof": "rimraf ./circuits/proofs && mkdir -p ./circuits/proofs && zokrates generate-proof --input ./circuits/out/out --proving-key-path ./circuits/keys/proving.key --witness ./circuits/witness/witness --proof-path ./circuits/proofs/proof.json",
+    "circuits:export-verifier": "zokrates export-verifier --output ./contracts/Verifier.sol"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.5",
+    "rimraf": "6.0.1"
+  }
+}
