@@ -1,5 +1,33 @@
-def main(private field a, field b) {
-    assert(a * a == b);
-    return;
+import "hashes/sha256/512bit" as hash;
+// import "hashes/utils/256bitsDirectionHelper" as multiplex;
+
+const u32 DEPTH = 2;
+
+def select(bool condition, u32[8] left, u32[8] right) -> (u32[8], u32[8]) {
+	return (condition ? right : left, condition ? left : right);
+}
+
+// proof I know secret and nullifier for a commitment that belongs to the tree
+def main(
+    u32[8] root, 
+    u32[8] nullifier_hash, 
+    private u32[8] secret, 
+    private u32[8] nullifier,
+    private bool[DEPTH] direction_selector,  // direction_selector => true if current digest is on the rhs of the hash
+    private u32[DEPTH][8] path
+) -> bool {
+    u32[8] commitment = hash(secret, nullifier);
+    u32[8] hashed_nullifier = hash(nullifier, [0, 0, 0, 0, 0, 0, 0, 0]);
+
+	// check root hash is correct starting from commitment leaf
+    u32[8] mut digest = commitment;
+	for u32 i in 0..DEPTH {
+		(u32[8], u32[8]) s = select(direction_selector[i], digest, path[i]);
+		digest = hash(s.0, s.1);
+	}
+
+   return 
+        hashed_nullifier == nullifier_hash // nullifier hash matches associated commitment
+        && digest == root; // root matches 
 }
 
