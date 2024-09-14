@@ -16,6 +16,10 @@ describe("Demo", function () {
   it("Should verify transaction", async () => {
     const { demo, proof, inputs } = await loadFixture(deployFixture);
 
-    expect(await demo.doSomethingIfValid(proof, inputs)).to.be.true;
+    expect(await demo.doSomethingIfValid(
+      proof, 
+      "0xd66d35c6c4a5d0fb122c783079f761e4cc6af7a1e7b25a52fb97f1dc4612bca9",
+      "0x0f1a97e112798f9bf98288ae89c288df2eb867c3de6fafa15fec625604e94762"
+    )).to.be.true;
   })
 });

@@ -1,33 +1,49 @@
-import "hashes/sha256/512bit" as hash;
+// import "hashes/mimcSponge/mimcSponge" as hash;
 // import "hashes/utils/256bitsDirectionHelper" as multiplex;
 
-const u32 DEPTH = 2;
+// const u32 DEPTH = 2;
 
-def select(bool condition, u32[8] left, u32[8] right) -> (u32[8], u32[8]) {
-	return (condition ? right : left, condition ? left : right);
+// def select(bool condition, field left, field right) -> (field, field) {
+// 	return (condition ? right : left, condition ? left : right);
+// }
+
+// // proof I know secret and nullifier for a commitment that belongs to the tree
+// def main(
+//     field k,
+//     field root, 
+//     field nullifier_hash, 
+//     private field secret, 
+//     private field nullifier,
+//     private bool[DEPTH] direction_selector,  // direction_selector => true if current digest is on the rhs of the hash
+//     private field[DEPTH] path
+// ) -> bool {
+//     field commitment = hash([secret, nullifier], k);
+//     field hashed_nullifier = hash([nullifier, 0], k);
+
+// 	// check root hash is correct starting from commitment leaf
+//     field mut digest = commitment;
+// 	for u32 i in 0..DEPTH {
+// 		(field, field) s = select(direction_selector[i], digest, path[i]);
+// 		digest = hash([s.0, s.1], k);
+// 	}
+
+//    return 
+//         hashed_nullifier == nullifier_hash // nullifier hash matches associated commitment
+//         && digest == root; // root matches 
+// }
+
+import "hashes/mimcSponge/mimcSponge" as mimcSponge;
+
+def main() {
+    assert(mimcSponge::<_, 3>([1, 2], 3) == [
+        20225509322021146255705869525264566735642015554514977326536820959638320229084,
+        13871743498877225461925335509899475799121918157213219438898506786048812913771,
+        21633608428713573518356618235457250173701815120501233429160399974209848779097
+    ]);
+    assert(mimcSponge::<_, 3>([0, 0], 0) == [
+        20636625426020718969131298365984859231982649550971729229988535915544421356929,
+        6046202021237334713296073963481784771443313518730771623154467767602059802325,
+        16227963524034219233279650312501310147918176407385833422019760797222680144279
+    ]);
+    return;
 }
-
-// proof I know secret and nullifier for a commitment that belongs to the tree
-def main(
-    u32[8] root, 
-    u32[8] nullifier_hash, 
-    private u32[8] secret, 
-    private u32[8] nullifier,
-    private bool[DEPTH] direction_selector,  // direction_selector => true if current digest is on the rhs of the hash
-    private u32[DEPTH][8] path
-) -> bool {
-    u32[8] commitment = hash(secret, nullifier);
-    u32[8] hashed_nullifier = hash(nullifier, [0, 0, 0, 0, 0, 0, 0, 0]);
-
-	// check root hash is correct starting from commitment leaf
-    u32[8] mut digest = commitment;
-	for u32 i in 0..DEPTH {
-		(u32[8], u32[8]) s = select(direction_selector[i], digest, path[i]);
-		digest = hash(s.0, s.1);
-	}
-
-   return 
-        hashed_nullifier == nullifier_hash // nullifier hash matches associated commitment
-        && digest == root; // root matches 
-}
-
