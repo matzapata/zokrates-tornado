@@ -2,9 +2,9 @@ import "hashes/mimcSponge/mimcSponge" as mimcSponge;
 
 const u32 DEPTH = 2;
 
-// computes mimcSponge([left, right])
-def hashLeftRight(field left, field right) -> field {
-    field[3] outs = mimcSponge::<_, 3>([left, right], 0); // k = 0
+// computes mimcSponge(elements)
+def hash<N>(field[N] elements) -> field {
+    field[3] outs = mimcSponge::<_, 3>(elements, 0); // k = 0
     return outs[0];
 }
 
@@ -25,32 +25,23 @@ def merkleTreeChecker(
     field mut digest = leaf;
 	for u32 i in 0..DEPTH {
 		(field, field) s = select(direction_selector[i], digest, path[i]);
-		digest = hashLeftRight(s.0, s.1);
+		digest = hash([s.0, s.1]);
 	}
 
    return digest == root;
 }
 
-// computes Pedersen(nullifier + secret) => (commitment, nullfierHash)
-def commitmentHasher(field secret, field nullifier) -> (field, field) {
-    // TODO: implement with pedersen
-    field commitment = hashLeftRight(secret, nullifier);
-    field nullifier_hash = hashLeftRight(nullifier, 0);
-   
-    return (commitment, nullifier_hash);
-}
-
 def main(
     field root,
     field nullifier_hash,
-    private field nullifier,
     private field secret,
+    private field nullifier,
     private field[DEPTH] path,
     private bool[DEPTH] direction_selector
 ) {
-    (field, field) hasher = commitmentHasher(secret, nullifier);
+    assert(nullifier_hash == hash([nullifier]));
 
-    assert(nullifier_hash == hasher.1);
-    assert(merkleTreeChecker(root, hasher.0, path, direction_selector) == true);
+    field commitment = hash([nullifier, secret]);
+    assert(merkleTreeChecker(root, commitment, path, direction_selector) == true);
     return;
 }
