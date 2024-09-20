@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import "./MerkleTreeWithHistory.sol";
 import "./Interfaces/IVerifier.sol";
 
-contract Tornado is MerkleTreeWithHistory {
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     uint256 public immutable denomination;
     IVerifier immutable verifier;
 
@@ -26,7 +28,7 @@ contract Tornado is MerkleTreeWithHistory {
 
     // collect native, insert in the merkle tree and emit event to allow for reconstruction of merkle tree
     // _commitment = hash(nullifier + secret)
-    function deposit(bytes32 _commitment) external payable {
+    function deposit(bytes32 _commitment) external payable nonReentrant {
         require(
             msg.value == denomination,
             "Wrong denomination. All deposits should be equal amount"
@@ -48,7 +50,7 @@ contract Tornado is MerkleTreeWithHistory {
         bytes32 _root,
         bytes32 _nullifierHash,
         address payable _recipient
-    ) external {
+    ) external nonReentrant {
         require(
             nullifierHashes[_nullifierHash] == false,
             "The note has been already spent"
