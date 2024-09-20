@@ -1,25 +1,27 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
-import "./Verifier.sol";
 import "./MerkleTreeWithHistory.sol";
+import "./Interfaces/IVerifier.sol";
 
-contract Tornado is MerkleTreeWithHistory, Verifier {
-    uint256 public denomination;
+contract Tornado is MerkleTreeWithHistory {
+    uint256 public immutable denomination;
+    IVerifier immutable verifier;
 
     mapping(bytes32 => bool) public nullifierHashes;
+    mapping(bytes32 => bool) public commitments;
 
-    event Deposit(bytes32 _commitment, uint256 _index, uint256 _timestamp); // required to rebuild the merkle tree by the user
+    event Deposit(bytes32 commitment, uint256 index, uint256 timestamp); // used to rebuild the merkle tree to generate the proof
     event Withdrawal(address to, bytes32 nullifierHash);
 
     constructor(
         uint256 _denomination,
         uint32 _levels,
-        IHasher _hasher
+        IHasher _hasher,
+        IVerifier _verifier
     ) MerkleTreeWithHistory(_levels, _hasher) {
         denomination = _denomination;
+        verifier = _verifier;
     }
 
     // collect native, insert in the merkle tree and emit event to allow for reconstruction of merkle tree
@@ -29,27 +31,34 @@ contract Tornado is MerkleTreeWithHistory, Verifier {
             msg.value == denomination,
             "Wrong denomination. All deposits should be equal amount"
         );
+        require(
+            commitments[_commitment] == false,
+            "The commitment has been submitted"
+        );
 
         uint256 insertedIndex = _insert(_commitment);
+
+        commitments[_commitment] = true;
 
         emit Deposit(_commitment, insertedIndex, block.timestamp);
     }
 
-    // avoid double spending by checking nullifier was spend or not
-    // check proof with merkle tree, verify proof and transfer funds
     function withdraw(
         Proof memory _proof,
-        bytes32 _root, // can't I link root update with tx that updated it and therefore know commitment?
+        bytes32 _root,
         bytes32 _nullifierHash,
         address payable _recipient
     ) external {
         require(
-            !nullifierHashes[_nullifierHash],
+            nullifierHashes[_nullifierHash] == false,
             "The note has been already spent"
         );
-        require(!isKnownRoot(_root), "Cannot find your merkle root");
+        require(isKnownRoot(_root) == true, "Cannot find your merkle root");
         require(
-            verifyTx(_proof, [uint256(_root), uint256(_nullifierHash)]),
+            verifier.verifyTx(
+                _proof,
+                [uint256(_root), uint256(_nullifierHash)]
+            ),
             "Invalid withdraw proof"
         );
 

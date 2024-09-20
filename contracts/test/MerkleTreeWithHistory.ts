@@ -2,7 +2,7 @@ import hre from "hardhat";
 import { buildMimcSponge, mimcSpongecontract } from "circomlibjs";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { calculateMerkleRootAndPath } from "./utils/tree";
+import { FixedMerkleTree } from "../utils/fixed-merkle-tree";
 
 const SEED = "mimcsponge";
 const TREE_LEVELS = 6;
@@ -39,15 +39,14 @@ describe("MerkleTreeWithHistory", function () {
   describe('#insert', () => {
     it('should insert', async () => {
       const { tree, mimcsponge } = await loadFixture(deployFixture);
+      
+      const treeJs = new FixedMerkleTree(TREE_LEVELS, [], buildHashFunction(mimcsponge))
 
-      const elements: number[] = []
-      for (let i = 1; i < 11; i++) {
+      for (let i = 1; i < TREE_LEVELS; i++) {
         await tree.insert(toFixedHex(i))
-        elements.push(i)
+        treeJs.insert(BigInt(i))
 
-        expect(BigInt(await tree.getLastRoot())).to.be.equal(
-          BigInt(calculateMerkleRootAndPath(mimcsponge, TREE_LEVELS, elements).root)
-        )
+        expect(BigInt(await tree.getLastRoot())).to.be.equal(treeJs.root)
       }
     })
 
@@ -66,20 +65,21 @@ describe("MerkleTreeWithHistory", function () {
   describe('#isKnownRoot', () => {
     it('should work', async () => {
       const { tree, mimcsponge } = await loadFixture(deployFixture);
+     
+      const treeJs = new FixedMerkleTree(TREE_LEVELS, [], buildHashFunction(mimcsponge))
 
-      const elements: number[] = []
+      
       for (let i = 1; i < 5; i++) {
         await tree.insert(toFixedHex(i))
-        elements.push(i)
+        treeJs.insert(i)
 
-
-        expect(await tree.isKnownRoot(toFixedHex(calculateMerkleRootAndPath(mimcsponge, TREE_LEVELS, elements).root)))
+        expect(await tree.isKnownRoot(toFixedHex(treeJs.root)))
           .to.be.equal(true)
       }
 
       // check outdated root
       await tree.insert(toFixedHex(42))
-      expect(await tree.isKnownRoot(toFixedHex(calculateMerkleRootAndPath(mimcsponge, TREE_LEVELS, elements).root)))
+      expect(await tree.isKnownRoot(toFixedHex(treeJs.root)))
         .to.be.equal(true)
     })
 
@@ -101,4 +101,8 @@ function toFixedHex(number: bigint | boolean | number | string, length = 32) {
   while (str.length < length * 2) str = '0' + str
   str = '0x' + str
   return str
+}
+
+function buildHashFunction(mimcsponge: any) {
+  return (l: bigint, r: bigint) => BigInt(mimcsponge.F.toString(mimcsponge.multiHash([l, r])))
 }

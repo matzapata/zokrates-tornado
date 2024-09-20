@@ -1,6 +1,6 @@
 import "hashes/mimcSponge/mimcSponge" as mimcSponge;
 
-const u32 DEPTH = 2;
+const u32 DEPTH = 6;
 
 // computes mimcSponge(elements)
 def hash<N>(field[N] elements) -> field {

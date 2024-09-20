@@ -1,5 +1,6 @@
 {
   "name": "hardhat-project",
+  "type": "commonjs",
   "scripts": {
     "test": "hardhat test",
     "circuits:setup": "rimraf ./circuits/keys && mkdir -p ./circuits/keys && zokrates setup --input ./circuits/out/out -p ./circuits/keys/proving.key -v ./circuits/keys/verification.key",
@@ -9,12 +10,18 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/circomlibjs": "0.1.6",
     "hardhat": "^2.22.5",
     "rimraf": "6.0.1",
     "typescript": "5.6.2"
   },
   "dependencies": {
     "@openzeppelin/merkle-tree": "1.0.7",
-    "keccak256": "1.0.6"
+    "circomlibjs": "0.1.7",
+    "fix-esm": "1.0.1",
+    "fixed-merkle-tree": "0.7.3",
+    "keccak256": "1.0.6",
+    "solc": "0.8.27",
+    "zokrates-js": "1.1.9"
   }
 }
