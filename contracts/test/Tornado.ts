@@ -59,7 +59,7 @@ describe("Tornado", function () {
 
     describe("#withdraw", () => {
         it("should work", async () => {
-            const { tornado, denomination, mimcsponge } = await loadFixture(deployFixture);
+            const { tornado, denomination } = await loadFixture(deployFixture);
             const { commitment, proof, root, nullifierHash } = loadProofFixture()
 
             await expect(tornado.deposit(toHex(commitment), { value: toHex(denomination) }))
@@ -103,8 +103,8 @@ describe("Tornado", function () {
         })
 
         it('should reject with tampered public inputs', async () => {
-            const { tornado, denomination, mimcsponge } = await loadFixture(deployFixture);
-            const { commitment, proof, root, nullifierHash } = loadProofFixture()
+            const { tornado, denomination } = await loadFixture(deployFixture);
+            const { commitment, proof, root } = loadProofFixture()
 
             await expect(tornado.deposit(toHex(commitment), { value: toHex(denomination) }))
                 .not.to.be.reverted
@@ -120,7 +120,7 @@ describe("Tornado", function () {
 
     describe('#isSpent', () => {
         it('should work', async () => {
-            const { tornado, denomination, mimcsponge } = await loadFixture(deployFixture);
+            const { tornado, denomination } = await loadFixture(deployFixture);
             const { commitment, proof, root, nullifierHash } = loadProofFixture()
 
             await expect(tornado.deposit(toHex(commitment), { value: toHex(denomination) }))
