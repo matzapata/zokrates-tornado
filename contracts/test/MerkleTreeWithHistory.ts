@@ -3,8 +3,8 @@ import { buildMimcSponge, mimcSpongecontract } from "circomlibjs";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { FixedMerkleTree } from "../utils/fixed-merkle-tree";
+import { SEED } from "../utils/mimc";
 
-const SEED = "mimcsponge";
 const TREE_LEVELS = 6;
 
 describe("MerkleTreeWithHistory", function () {
